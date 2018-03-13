@@ -1,0 +1,25 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio 15
+VisualStudioVersion = 15.0.27428.2002
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ScalaSbtLSP", "ScalaSbtLSP\ScalaSbtLSP.csproj", "{C5153AAE-BC47-4B08-B61E-43D03FF333C8}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{C5153AAE-BC47-4B08-B61E-43D03FF333C8}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{C5153AAE-BC47-4B08-B61E-43D03FF333C8}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{C5153AAE-BC47-4B08-B61E-43D03FF333C8}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{C5153AAE-BC47-4B08-B61E-43D03FF333C8}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {5931AE31-0BCC-4EF6-B23C-8A894E9DC56F}
+	EndGlobalSection
+EndGlobal
