@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>beforeRunningCommand</key>
+	<string>saveModifiedFiles</string>
+	<key>command</key>
+	<string>#!/usr/bin/env ruby18
+
+require "#{ENV['TM_SUPPORT_PATH']}/lib/tm/executor"
+require "#{ENV['TM_SUPPORT_PATH']}/lib/tm/save_current_document"
+
+TextMate.save_if_untitled('scala')
+TextMate::Executor.run(ENV['TM_SCALA'], '-nocompdaemon', '-howtorun:script', ENV['TM_FILEPATH'], :version_args =&gt; ["-version"], :version_regex =&gt; /\AScala code runner version ([^\s]*).*/m)
+</string>
+	<key>input</key>
+	<string>document</string>
+	<key>inputFormat</key>
+	<string>text</string>
+	<key>keyEquivalent</key>
+	<string>@r</string>
+	<key>name</key>
+	<string>Run</string>
+	<key>outputCaret</key>
+	<string>afterOutput</string>
+	<key>outputFormat</key>
+	<string>html</string>
+	<key>outputLocation</key>
+	<string>newWindow</string>
+	<key>requiredCommands</key>
+	<array>
+		<dict>
+			<key>command</key>
+			<string>scala</string>
+			<key>locations</key>
+			<array>
+				<string>/usr/local/bin/scala</string>
+				<string>/opt/local/bin/scala</string>
+			</array>
+			<key>variable</key>
+			<string>TM_SCALA</string>
+		</dict>
+	</array>
+	<key>scope</key>
+	<string>source.scala</string>
+	<key>uuid</key>
+	<string>DDFBBCF9-D333-4077-8D4F-EF6F2CA62220</string>
+	<key>version</key>
+	<integer>2</integer>
+</dict>
+</plist>
