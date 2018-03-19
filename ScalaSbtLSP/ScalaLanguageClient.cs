@@ -14,6 +14,8 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.VisualStudio.LanguageServer.Client;
+using Microsoft.VisualStudio.Shell;
+using Microsoft.VisualStudio.Shell.Interop;
 using Microsoft.VisualStudio.Threading;
 using Microsoft.VisualStudio.Utilities;
 using Newtonsoft.Json;
@@ -70,61 +72,88 @@ namespace ScalaSbtLSP
 
         public async Task<Connection> ActivateAsync(CancellationToken token)
         {
-            await Task.Yield();
-            Debugger.Launch();
-            Debugger.Break();
-            ProcessStartInfo sbtStartInfo = new ProcessStartInfo();
-            string workingdirectory = @"C:\Users\marti\scala\test\";
-            sbtStartInfo.WorkingDirectory = workingdirectory;
-            sbtStartInfo.FileName = "sbt";
-            sbtStartInfo.RedirectStandardInput = false;
-            sbtStartInfo.RedirectStandardOutput = false;
-            sbtStartInfo.UseShellExecute = true;
-            sbtStartInfo.CreateNoWindow = false;
-
-            Process process = new Process();
-            process.StartInfo = sbtStartInfo;
-
-            if (process.Start())
+            return null;
+            try
             {
-                var portfilelocation = await WaitForPortfile(workingdirectory, token);
-                var portfile = await ReadPortFile(portfilelocation, token);
-                var tokenfile = await ReadToken(portfile, token);
-                if (tokenfile != null)
-                {
-                    connectionToken = tokenfile.token;
-                }
+                await System.Threading.Tasks.Task.Yield();
+                var solutiono = ServiceProvider.GlobalProvider.GetService(typeof(SVsSolution));
+                var solution = solutiono as IVsSolution;
 
-                var connectionuri = portfile.uri;
-                if (connectionuri.StartsWith("local:"))
-                {
+                solution.GetSolutionInfo(out string workingdirectory, out string file, out string ops);
+                // dir will contain the solution's directory path (folder in the open folder case)
 
-                    //if on Windows, named pipe. If on Unix, local socket
-                    //if on Unix, we're not running this, because no VS
-                    //so it's a named pipe.
-                    string pipename = String.Concat(connectionuri.Split(':').Skip(1).ToArray());
-                    using (var pipe = new NamedPipeClientStream(".", pipename, PipeDirection.InOut))
+                solution.GetProperty((int)__VSPROPID.VSPROPID_IsSolutionOpen, out object open);
+                bool isOpen = (bool)open; // is the solution open?
+
+                // __VSPROPID7 needs Microsoft.VisualStudio.Shell.Interop.15.0.DesignTime.dll
+                solution.GetProperty((int)__VSPROPID7.VSPROPID_IsInOpenFolderMode, out object folderMode);
+                bool isInFolderMode = (bool)folderMode; // is the solution in folder mode?
+
+                ProcessStartInfo sbtStartInfo = new ProcessStartInfo();
+                var sbtcmd = "sbt";
+                sbtStartInfo.WorkingDirectory = workingdirectory;
+                sbtStartInfo.FileName = "cmd.exe";
+
+                // get solution reference from a service provider (package, etc.)
+                
+
+
+                sbtStartInfo.RedirectStandardInput = true;
+                sbtStartInfo.RedirectStandardOutput = false;
+                sbtStartInfo.UseShellExecute = false;
+                sbtStartInfo.CreateNoWindow = false;
+
+                Process process = new Process
+                {
+                    StartInfo = sbtStartInfo
+                };
+
+                if (process.Start())
+                {
+                    //await process.StandardInput.WriteLineAsync(cdcmd);
+                    await process.StandardInput.WriteLineAsync(sbtcmd);
+                    var portfilelocation = await WaitForPortfile(workingdirectory, token);
+                    var portfile = await ReadPortFile(portfilelocation, token);
+                    var tokenfile = await ReadToken(portfile, token);
+                    if (tokenfile != null)
                     {
-                        return new Connection(pipe, pipe);
+                        connectionToken = tokenfile.token;
                     }
-                }
-                else if (connectionuri.StartsWith("tcp:"))
-                {
-                    //tcp
-                    var endpoint = CreateIPEndPoint(tokenfile.uri);
 
-                    using (var tcpclient = new TcpClient())
-                    using (var stream = tcpclient.GetStream())
+                    var connectionuri = portfile.uri;
+                    if (connectionuri.StartsWith("local:"))
                     {
-                        var connection = new Connection(stream, stream);
-                        await tcpclient.ConnectAsync(endpoint.Address, endpoint.Port);
-                        return connection;
+
+                        //if on Windows, named pipe. If on Unix, local socket
+                        //if on Unix, we're not running this, because no VS
+                        //so it's a named pipe.
+                        string pipename = String.Concat(connectionuri.Split(':').Skip(1).ToArray());
+                        using (Stream pipe = new NamedPipeClientStream(".", pipename, PipeDirection.InOut))
+                        {
+                            
+                            return new Connection(pipe, pipe);
+                        }
                     }
+                    else if (connectionuri.StartsWith("tcp:"))
+                    {
+                        //tcp
+                        var endpoint = CreateIPEndPoint(tokenfile.uri);
+
+                        using (var tcpclient = new TcpClient())
+                        using (var stream = tcpclient.GetStream())
+                        {
+                            var connection = new Connection(stream, stream);
+                            await tcpclient.ConnectAsync(endpoint.Address, endpoint.Port);
+                            return connection;
+                        }
+                    }
+                    //if we got to here, we got an unknown protocal, and we can't connect
+                    //fall through
                 }
-                //if we got to here, we got an unknown protocal, and we can't connect
-                //fall through
+            } catch (Exception e)
+            {
+                var whathappened = e;
             }
-
 
             return null;
         }
@@ -158,32 +187,32 @@ namespace ScalaSbtLSP
             }
         }
 
-        private async Task<FileInfo> WaitForPortfile(String basepath, CancellationToken token)
+        private static async Task<FileInfo> WaitForPortfile(String basepath, CancellationToken token)
         {
-            var subpath = "project\target\active.json";
+            var subpath = @"project\target\active.json";
             var file = Path.Combine(basepath, subpath);
             var result = new FileInfo(file);
             while (!result.Exists)
             {
-                if (token.IsCancellationRequested) return await Task.FromCanceled<FileInfo>(token);
-                await Task.Delay(new TimeSpan(0, 0, 0, 0, 500), token);
+                if (token.IsCancellationRequested) return await System.Threading.Tasks.Task.FromCanceled<FileInfo>(token);
+                await System.Threading.Tasks.Task.Delay(new TimeSpan(0, 0, 0, 0, 500), token);
             }
             return result;
         }
 
-        public async Task OnLoadedAsync()
+        public async System.Threading.Tasks.Task OnLoadedAsync()
         {
             await StartAsync?.InvokeAsync(this, EventArgs.Empty);
         }
 
-        public async Task OnServerInitializeFailedAsync(Exception e)
+        public async System.Threading.Tasks.Task OnServerInitializeFailedAsync(Exception e)
         {
-            await Task.CompletedTask;
+            await System.Threading.Tasks.Task.CompletedTask;
         }
 
-        public async Task OnServerInitializedAsync()
+        public async System.Threading.Tasks.Task OnServerInitializedAsync()
         {
-            await Task.CompletedTask;
+            await System.Threading.Tasks.Task.CompletedTask;
         }
     }
 }
