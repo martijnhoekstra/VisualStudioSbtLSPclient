@@ -20,23 +20,30 @@ using Microsoft.VisualStudio.Threading;
 using Microsoft.VisualStudio.Utilities;
 using Newtonsoft.Json;
 
-namespace ScalaSbtLSP
+namespace ScalaLSP.SbtServer
 {
 
     [ContentType("scala")]
     [Export(typeof(ILanguageClient))]
-    public class ScalaLanguageClient : ILanguageClient
+    public class SbtServerClient : ILanguageClient
     {
-        public string Name => "Scala Language Extension";
+        public string Name => "SBT Server Scala Language Extension";
+
+        private Process sbt;
 
         public IEnumerable<string> ConfigurationSections => null;
 
         private string connectionToken = null;
 
-        public object InitializationOptions => connectionToken == null ? null : new
-        {
-            token = connectionToken
-        };
+        public object InitializationOptions {
+            get {
+                Console.WriteLine("passing initialization object");
+                return connectionToken == null ? null : new
+                {
+                    token = connectionToken
+                };
+            }
+        }
 
         public IEnumerable<string> FilesToWatch => null;
 
@@ -72,46 +79,32 @@ namespace ScalaSbtLSP
 
         public async Task<Connection> ActivateAsync(CancellationToken token)
         {
-            return null;
+            
             try
             {
                 await System.Threading.Tasks.Task.Yield();
-                var solutiono = ServiceProvider.GlobalProvider.GetService(typeof(SVsSolution));
-                var solution = solutiono as IVsSolution;
-
-                solution.GetSolutionInfo(out string workingdirectory, out string file, out string ops);
-                // dir will contain the solution's directory path (folder in the open folder case)
-
-                solution.GetProperty((int)__VSPROPID.VSPROPID_IsSolutionOpen, out object open);
-                bool isOpen = (bool)open; // is the solution open?
-
-                // __VSPROPID7 needs Microsoft.VisualStudio.Shell.Interop.15.0.DesignTime.dll
-                solution.GetProperty((int)__VSPROPID7.VSPROPID_IsInOpenFolderMode, out object folderMode);
-                bool isInFolderMode = (bool)folderMode; // is the solution in folder mode?
-
-                ProcessStartInfo sbtStartInfo = new ProcessStartInfo();
+                string workingdirectory = Util.GetWorkingDirectory();
                 var sbtcmd = "sbt";
-                sbtStartInfo.WorkingDirectory = workingdirectory;
-                sbtStartInfo.FileName = "cmd.exe";
+                ProcessStartInfo sbtStartInfo = new ProcessStartInfo
+                {
+                    WorkingDirectory = workingdirectory,
+                    FileName = "cmd.exe",
 
-                // get solution reference from a service provider (package, etc.)
-                
+                    RedirectStandardInput = true,
+                    RedirectStandardOutput = false,
+                    UseShellExecute = false,
+                    CreateNoWindow = false
+                };
 
-
-                sbtStartInfo.RedirectStandardInput = true;
-                sbtStartInfo.RedirectStandardOutput = false;
-                sbtStartInfo.UseShellExecute = false;
-                sbtStartInfo.CreateNoWindow = false;
-
-                Process process = new Process
+                sbt = new Process
                 {
                     StartInfo = sbtStartInfo
                 };
-
-                if (process.Start())
+                //return new Connection(new MemoryStream(), new MemoryStream());
+                if (sbt.Start())
                 {
-                    //await process.StandardInput.WriteLineAsync(cdcmd);
-                    await process.StandardInput.WriteLineAsync(sbtcmd);
+                    StopAsync += ScalaLanguageClient_StopAsync;
+                    await sbt.StandardInput.WriteLineAsync(sbtcmd);
                     var portfilelocation = await WaitForPortfile(workingdirectory, token);
                     var portfile = await ReadPortFile(portfilelocation, token);
                     var tokenfile = await ReadToken(portfile, token);
@@ -128,19 +121,29 @@ namespace ScalaSbtLSP
                         //if on Unix, we're not running this, because no VS
                         //so it's a named pipe.
                         string pipename = String.Concat(connectionuri.Split(':').Skip(1).ToArray());
-                        using (Stream pipe = new NamedPipeClientStream(".", pipename, PipeDirection.InOut))
+                        //no using block to avoid disposing pipe
+                        try
                         {
-                            
-                            return new Connection(pipe, pipe);
+                            var pipe = new NamedPipeClientStream(".", pipename, PipeDirection.InOut, PipeOptions.Asynchronous);
+                            await pipe.ConnectAsync();
+                            var connection = new Connection(pipe, pipe);
+                            return connection;
                         }
+                        catch (Exception e)
+                        {
+                            return null;
+                        }
+
+
+
                     }
                     else if (connectionuri.StartsWith("tcp:"))
                     {
                         //tcp
                         var endpoint = CreateIPEndPoint(tokenfile.uri);
-
-                        using (var tcpclient = new TcpClient())
-                        using (var stream = tcpclient.GetStream())
+                        //no using, no dispose
+                        var tcpclient = new TcpClient();
+                        var stream = tcpclient.GetStream();
                         {
                             var connection = new Connection(stream, stream);
                             await tcpclient.ConnectAsync(endpoint.Address, endpoint.Port);
@@ -150,12 +153,20 @@ namespace ScalaSbtLSP
                     //if we got to here, we got an unknown protocal, and we can't connect
                     //fall through
                 }
-            } catch (Exception e)
+            }
+            catch (Exception e)
             {
                 var whathappened = e;
             }
+            var iscancelled = token.IsCancellationRequested;
 
             return null;
+        }
+
+        private System.Threading.Tasks.Task ScalaLanguageClient_StopAsync(object sender, EventArgs args)
+        {
+            sbt.Kill();
+            return System.Threading.Tasks.Task.CompletedTask;
         }
 
         private static IPEndPoint CreateIPEndPoint(string endPoint)
@@ -207,7 +218,7 @@ namespace ScalaSbtLSP
 
         public async System.Threading.Tasks.Task OnServerInitializeFailedAsync(Exception e)
         {
-            await System.Threading.Tasks.Task.CompletedTask;
+            throw new Exception("On Server Initizile Failed: " + e.Message, e);
         }
 
         public async System.Threading.Tasks.Task OnServerInitializedAsync()

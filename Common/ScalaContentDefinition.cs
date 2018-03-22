@@ -1,14 +1,12 @@
-﻿using Microsoft.VisualStudio.LanguageServer.Client;
+﻿/*
+ * Doesn't get "picked up" when in a different assembly.
+ * I'm unsure what "getting picked up" even means. 
+ * 
+using Microsoft.VisualStudio.LanguageServer.Client;
 using Microsoft.VisualStudio.Utilities;
 using System.ComponentModel.Composition;
 
-/*
- * While doing things doesn't appear to this classes strong suit
- * apparently this has to exist, and does something.
- *  ¯\_(ツ)_/¯
- */
-
-namespace ScalaLSP.SbtServer
+namespace ScalaLSP.Common
 {
     public class ScalaContentDefinition
     {
@@ -24,3 +22,4 @@ namespace ScalaLSP.SbtServer
         internal static FileExtensionToContentTypeDefinition ScalaFileExtensionDefinition;
     }
 }
+*/

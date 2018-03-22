@@ -5,6 +5,8 @@ VisualStudioVersion = 15.0.27428.2002
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ScalaSbtLSP", "ScalaSbtLSP\ScalaSbtLSP.csproj", "{C5153AAE-BC47-4B08-B61E-43D03FF333C8}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Common", "Common\Common.csproj", "{F25AEDA9-3847-448D-A9BD-F0A9B87A8033}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -15,6 +17,10 @@ Global
 		{C5153AAE-BC47-4B08-B61E-43D03FF333C8}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{C5153AAE-BC47-4B08-B61E-43D03FF333C8}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{C5153AAE-BC47-4B08-B61E-43D03FF333C8}.Release|Any CPU.Build.0 = Release|Any CPU
+		{F25AEDA9-3847-448D-A9BD-F0A9B87A8033}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{F25AEDA9-3847-448D-A9BD-F0A9B87A8033}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{F25AEDA9-3847-448D-A9BD-F0A9B87A8033}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{F25AEDA9-3847-448D-A9BD-F0A9B87A8033}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

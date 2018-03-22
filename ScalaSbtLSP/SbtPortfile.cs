@@ -1,4 +1,4 @@
-﻿namespace ScalaSbtLSP
+﻿namespace ScalaLSP.SbtServer
 {
   public class SbtPortfile
   {
