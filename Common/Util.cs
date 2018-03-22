@@ -8,9 +8,31 @@ using System.Threading.Tasks;
 
 namespace ScalaLSP.Common
 {
+    public interface WorkingDirectory {
+        A Fold<A>(Func<String, A> onDir, Func<A> onNoFolderMode, Func<A> onNoActiveFolder);
+    }
+
+
+
     public class Util
     {
-        public static string GetWorkingDirectory()
+        private struct OpenWorkingDirectory : WorkingDirectory
+        {
+            private string Dir;
+            public OpenWorkingDirectory(string dir) { Dir = dir; }
+
+            public A Fold<A>(Func<string, A> onDir, Func<A> onNoFolderMode, Func<A> onNoActiveFolder) => onDir(Dir);
+        }
+        private struct NotInFolderMode : WorkingDirectory
+        {
+            public A Fold<A>(Func<string, A> onDir, Func<A> onNoFolderMode, Func<A> onNoActiveFolder) => onNoFolderMode();
+        }
+        private struct NoActiveFolder : WorkingDirectory
+        {
+            public A Fold<A>(Func<string, A> onDir, Func<A> onNoFolderMode, Func<A> onNoActiveFolder) => onNoActiveFolder();
+        }
+
+        public static WorkingDirectory GetWorkingDirectory()
         {
             var solutiono = ServiceProvider.GlobalProvider.GetService(typeof(SVsSolution));
             var solution = solutiono as IVsSolution;
@@ -24,10 +46,9 @@ namespace ScalaLSP.Common
             // __VSPROPID7 needs Microsoft.VisualStudio.Shell.Interop.15.0.DesignTime.dll
             solution.GetProperty((int)__VSPROPID7.VSPROPID_IsInOpenFolderMode, out object folderMode);
             bool isInFolderMode = (bool)folderMode; // is the solution in folder mode?
-            if (!isInFolderMode) throw new Exception("Not in Folder Mode");
-            if (workingdirectory == null) throw new Exception("Working directory not found (is Visual Studio in Folder Mode?)");
-            return workingdirectory;
+            if (!isInFolderMode) return new NotInFolderMode();
+            if (workingdirectory == null) return new NoActiveFolder();
+            return new OpenWorkingDirectory(workingdirectory);
         }
-
     }
 }

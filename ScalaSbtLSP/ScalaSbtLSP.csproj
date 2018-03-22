@@ -49,6 +49,7 @@
   <ItemGroup>
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="SbtPortfile.cs" />
+    <Compile Include="SBTProcess.cs" />
     <Compile Include="SbtServerClient.cs" />
     <Compile Include="ScalaContentDefinition.cs" />
     <Compile Include="TokenFile.cs" />
