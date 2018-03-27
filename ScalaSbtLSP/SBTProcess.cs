@@ -1,7 +1,6 @@
 ﻿using Microsoft.VisualStudio.LanguageServer.Client;
 using Newtonsoft.Json;
 using System;
-using System.Collections.Generic;
 using System.Diagnostics;
 using System.Globalization;
 using System.IO;
@@ -21,7 +20,7 @@ namespace ScalaLSP.SbtServer
         public static async Task<Process> StartSBT(string basedir)
         {
             var sbtcmd = "sbt";
-            ProcessStartInfo sbtStartInfo = new ProcessStartInfo
+            ProcessStartInfo cmdStartInfo = new ProcessStartInfo
             {
                 WorkingDirectory = basedir,
                 FileName = "cmd.exe",
@@ -32,14 +31,25 @@ namespace ScalaLSP.SbtServer
                 CreateNoWindow = false
             };
 
+            ProcessStartInfo sbtStartInfo = new ProcessStartInfo
+            {
+                WorkingDirectory = basedir,
+                FileName = "sbt",
+
+                RedirectStandardInput = false,
+                RedirectStandardOutput = false,
+                UseShellExecute = true,
+                CreateNoWindow = false
+            };
+
             var sbt = new Process
             {
                 StartInfo = sbtStartInfo
             };
-            //return new Connection(new MemoryStream(), new MemoryStream());
+            
             if (sbt.Start())
             {
-                await sbt.StandardInput.WriteLineAsync(sbtcmd);
+                //await sbt.StandardInput.WriteLineAsync(sbtcmd);
                 return sbt;
             }
             else
@@ -139,6 +149,14 @@ namespace ScalaLSP.SbtServer
             {
                 return new IPEndPoint(ip, port);
             }
+        }
+
+        public static async Task<(string, string)> WaitForConnectionUriAndTokenAsync(string workingdirectory, CancellationToken token)
+        {
+            var portfilelocation = await WaitForPortfile(workingdirectory, token);
+            var portfile = await ReadPortFile(portfilelocation, token);
+            var tokenfile = await ReadToken(portfile, token);
+            return (portfile.uri, tokenfile?.token);
         }
     }
 }

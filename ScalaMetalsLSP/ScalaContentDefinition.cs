@@ -1,15 +1,20 @@
-﻿/*
- * Doesn't get "picked up" when in a different assembly.
- * I'm unsure what "getting picked up" even means. 
- * 
-using Microsoft.VisualStudio.LanguageServer.Client;
+﻿using Microsoft.VisualStudio.LanguageServer.Client;
 using Microsoft.VisualStudio.Utilities;
 using System.ComponentModel.Composition;
 
-namespace ScalaLSP.Common
+/*
+ * While doing things doesn't appear to this classes strong suit
+ * apparently this has to exist, and does something.
+ * Copy paste from the sbt one.
+ *  ¯\_(ツ)_/¯
+ */
+
+namespace ScalaLSP.Metals
 {
     public class ScalaContentDefinition
     {
+#pragma warning disable CS0649
+
         [Export]
         [Name("scala")]
         [BaseDefinition(CodeRemoteContentDefinition.CodeRemoteContentTypeName)]
@@ -22,4 +27,3 @@ namespace ScalaLSP.Common
         internal static FileExtensionToContentTypeDefinition ScalaFileExtensionDefinition;
     }
 }
-*/

@@ -12,6 +12,8 @@ namespace ScalaLSP.SbtServer
 {
     public class ScalaContentDefinition
     {
+        #pragma warning disable CS0649
+
         [Export]
         [Name("scala")]
         [BaseDefinition(CodeRemoteContentDefinition.CodeRemoteContentTypeName)]

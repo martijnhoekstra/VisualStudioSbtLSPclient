@@ -1,18 +1,17 @@
 <?xml version="1.0" encoding="utf-8"?>
 <PackageManifest Version="2.0.0" xmlns="http://schemas.microsoft.com/developer/vsx-schema/2011" xmlns:d="http://schemas.microsoft.com/developer/vsx-schema-design/2011">
     <Metadata>
-        <Identity Id="ScalaSbtLSP.ad8192c7-c087-466a-a7f1-93b88f613041" Version="1.0" Language="en-US" Publisher="Martijn Hoekstra" />
-        <DisplayName>ScalaSbtLSP</DisplayName>
-        <Description xml:space="preserve">Scala LSP client for SBT Server</Description>
+        <Identity Id="ScalaMetalsLSP.c1639d28-c950-47a8-8c12-ab9c5574b19c" Version="1.0" Language="en-US" Publisher="Martijn Hoekstra" />
+        <DisplayName>ScalaMetalsLSP</DisplayName>
+        <Description xml:space="preserve">MetaLS Scala Language Server Client</Description>
         <License>lgpl-3.0.rtf</License>
-        <Tags>scala LSP sbt</Tags>
     </Metadata>
     <Installation>
-        <InstallationTarget Id="Microsoft.VisualStudio.Community" Version="[15.0]" />
+        <InstallationTarget Id="Microsoft.VisualStudio.Community" Version="[15.0, 16.0)" />
     </Installation>
     <Dependencies>
         <Dependency Id="Microsoft.Framework.NDP" DisplayName="Microsoft .NET Framework" d:Source="Manual" Version="[4.5,)" />
-        <Dependency d:Source="Manual" d:InstallSource="Download" Location=" https://marketplace.visualstudio.com/items?itemName=vsext.LanguageServerClientPreview" Version="[1.0,2.0)" DisplayName="Language Server Protocol Client Preview" Id="Microsoft.VisualStudio.LanguageServer.Client.Preview" />
+        <Dependency d:Source="Manual" DisplayName="Language Server Protocol Client Preview" Id="Microsoft.VisualStudio.LanguageServer.Client.Preview" Version="[1.0,2.0)" d:InstallSource="Download" Location="https://marketplace.visualstudio.com/items?itemName=vsext.LanguageServerClientPreview" />
     </Dependencies>
     <Assets>
         <Asset Type="Microsoft.VisualStudio.MefComponent" d:Source="Project" d:ProjectName="%CurrentProject%" Path="|%CurrentProject%|" />

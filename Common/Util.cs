@@ -1,18 +1,13 @@
 ﻿using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.Shell.Interop;
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace ScalaLSP.Common
 {
-    public interface WorkingDirectory {
+    public interface WorkingDirectory
+    {
         A Fold<A>(Func<String, A> onDir, Func<A> onNoFolderMode, Func<A> onNoActiveFolder);
     }
-
-
 
     public class Util
     {
@@ -44,9 +39,9 @@ namespace ScalaLSP.Common
             bool isOpen = (bool)open; // is the solution open?
 
             // __VSPROPID7 needs Microsoft.VisualStudio.Shell.Interop.15.0.DesignTime.dll
-            solution.GetProperty((int)__VSPROPID7.VSPROPID_IsInOpenFolderMode, out object folderMode);
-            bool isInFolderMode = (bool)folderMode; // is the solution in folder mode?
-            if (!isInFolderMode) return new NotInFolderMode();
+            //solution.GetProperty((int)__VSPROPID7.VSPROPID_IsInOpenFolderMode, out object folderMode);
+            //bool isInFolderMode = (bool)folderMode; // is the solution in folder mode?
+            //if (!isInFolderMode) return new NotInFolderMode();
             if (workingdirectory == null) return new NoActiveFolder();
             return new OpenWorkingDirectory(workingdirectory);
         }

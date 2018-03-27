@@ -1,16 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel.Composition;
-using System.Diagnostics;
-using System.Globalization;
-using System.IO.Pipes;
-using System.Linq;
-using System.Net;
-using System.Net.Sockets;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.VisualStudio.LanguageServer.Client;
-using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.Threading;
 using Microsoft.VisualStudio.Utilities;
 using ScalaLSP.Common;
@@ -24,8 +17,6 @@ namespace ScalaLSP.SbtServer
     {
         public string Name => "SBT Server Scala Language Extension";
 
-        private Process sbt;
-
         public IEnumerable<string> ConfigurationSections => null;
 
         private string connectionToken = null;
@@ -35,17 +26,17 @@ namespace ScalaLSP.SbtServer
             token = connectionToken
         };
 
-        public IEnumerable<string> FilesToWatch => null;
+        public IEnumerable<string> FilesToWatch => new List<String>() { @"**/src/**/scala/**/*.scala" };
 
         public event AsyncEventHandler<EventArgs> StartAsync;
         public event AsyncEventHandler<EventArgs> StopAsync;
 
         public async Task<Connection> ActivateAsync(CancellationToken token)
         {
-            Task<Connection> noConnection() => System.Threading.Tasks.Task.FromResult<Connection>(null);
+            Task<Connection> noConnection() => Task.FromResult<Connection>(null);
             try
             {
-                await System.Threading.Tasks.Task.Yield();
+                await Task.Yield();
                 var workingdirectoryresult = Util.GetWorkingDirectory();
                 return await workingdirectoryresult.Fold(str => ConnectToWorkingDirectoryAsync(str, token), noConnection, noConnection);
             }
@@ -60,16 +51,16 @@ namespace ScalaLSP.SbtServer
 
         private async Task<Connection> ConnectToWorkingDirectoryAsync(string workingdirectory, CancellationToken token)
         {
-            string connectionuri = await WaitForSBTStartAsync(workingdirectory, token);
+            var (connectionuri, ctoken) = await SBTProcess.WaitForConnectionUriAndTokenAsync(workingdirectory, token);
             if (connectionuri == null) return null;
             else
             {
-                StopAsync += ScalaLanguageClient_StopAsync;
+                connectionToken = ctoken;
                 return await ConnectPortfileURLAsync(connectionuri);
             }
-        }
+        } 
 
-        private async Task<Connection> ConnectPortfileURLAsync(string connectionuri)
+        private static async Task<Connection> ConnectPortfileURLAsync(string connectionuri)
         {
             Connection connection = null;
             if (connectionuri.StartsWith("local:"))
@@ -83,45 +74,28 @@ namespace ScalaLSP.SbtServer
             return connection;
         }
 
-        private async Task<string> WaitForSBTStartAsync(string workingdirectory, CancellationToken token)
+
+        public async Task OnLoadedAsync()
         {
-            sbt = await SBTProcess.StartSBT(workingdirectory);
-            if (sbt == null) return null;
-            else
+            var workingdirectoryresult = Util.GetWorkingDirectory();
+            var sbt = await workingdirectoryresult.Fold(SBTProcess.StartSBT, () => throw new Exception("Visual Studio is not in folder mode"), () => throw new Exception("solution folder was null"));
+            if(sbt == null)
             {
-                var portfilelocation = await SBTProcess.WaitForPortfile(workingdirectory, token);
-                var portfile = await SBTProcess.ReadPortFile(portfilelocation, token);
-                var tokenfile = await SBTProcess.ReadToken(portfile, token);
-                if (tokenfile != null)
-                {
-                    connectionToken = tokenfile.token;
-                }
-
-                var connectionuri = portfile.uri;
-                return connectionuri;
+                throw new Exception("SBT failed to start");
             }
-        }
-
-        private System.Threading.Tasks.Task ScalaLanguageClient_StopAsync(object sender, EventArgs args)
-        {
-            sbt.Kill();
-            return System.Threading.Tasks.Task.CompletedTask;
-        }
-
-
-        public async System.Threading.Tasks.Task OnLoadedAsync()
-        {
+            StopAsync += (object sender, EventArgs args) =>
+            {
+                sbt.Kill();
+                return Task.CompletedTask;
+            };
             await StartAsync?.InvokeAsync(this, EventArgs.Empty);
         }
 
-        public async System.Threading.Tasks.Task OnServerInitializeFailedAsync(Exception e)
-        {
-            throw new Exception("On Server Initizile Failed: " + e.Message, e);
-        }
+        public Task OnServerInitializeFailedAsync(Exception e) => Task.FromException(new Exception("On Server Initizile Failed: " + e.Message, e));
 
-        public async System.Threading.Tasks.Task OnServerInitializedAsync()
+        public async Task OnServerInitializedAsync()
         {
-            await System.Threading.Tasks.Task.CompletedTask;
+            await Task.CompletedTask;
         }
     }
 }
