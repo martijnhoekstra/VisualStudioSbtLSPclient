@@ -1,7 +1,6 @@
 ﻿# Visual Studio LSP client for sbt Server
 
-This is an LSP client for sbt Server, providing a rich editor bringing the features of [https://www.scala-sbt.org/1.x/docs/sbt-server.html](sbt-servers LSP implementation
-to Visual Studio) for Visual Studio 2017 Preview
+This is an LSP client for sbt Server, providing a rich editor bringing the features of [sbt-servers LSP implementation](https://www.scala-sbt.org/1.x/docs/sbt-server.html) to Visual Studio 2017 Preview
 
 ## Installation
 
@@ -33,6 +32,6 @@ and all features exposed by sbt server. If sbt server grows new features, these 
 ## License
 Copyright Martijn Hoekstra.
 
-This software is offered under the LGPLv3: see LICENSE.md
+This software is offered under the LGPLv3: see [the license](../LICENSE.md)
 
 All the textmate stuff found in the TextMate directory is shamelessly stolen from Mads Hartmann Jensen, and is available under the MIT license. See the LICENSE file in the TextMate directory for details.
